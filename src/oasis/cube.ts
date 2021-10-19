@@ -11,7 +11,7 @@ import {
     MeshTopology,
 } from "oasis-engine";
 
-function hexToRgb(hex) {
+function hexToRgb(hex: string) {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return new Color(
         parseInt(result[1], 16) / 255,

@@ -9,14 +9,46 @@ import {
 	Layer,
 	HitResult,
 	BoxCollider,
+	Entity,
+	Engine,
 } from "oasis-engine";
 import { OrbitControl } from "@oasis-engine/controls";
 import { createCube } from "./cube";
 import CubeScript from "./script";
-import { CUBE_SIZE, CUBE_STROKE } from "./constants";
+import { CUBE_SIZE, CUBE_STROKE, CUBE_LEVEL } from "./constants";
+import { xyzHelper } from './xyzHelper';
 
 // @ts-ignore
 window.Vector3 = Vector3;
+
+export function createRuickCube(rootEntity: Entity, engine: Engine) {
+	const isEven = CUBE_LEVEL % 2 === 0;
+	let start = - Math.floor(CUBE_LEVEL / 2);
+	let end = Math.ceil(CUBE_LEVEL / 2);
+	let offset = 0;
+	if (isEven) {
+		start += 1;
+		end += 1;
+		offset = -0.5;
+	}
+	for (let i = start; i < end; i++) {
+		for (let j = start; j < end; j++) {
+			for (let k = start; k < end; k++) {
+				const cubeEntity = rootEntity.createChild("cube");
+				const cubePos = cubeEntity.transform.position;
+				cubePos.setValue((i + offset) * CUBE_SIZE, (j + offset) * CUBE_SIZE, (k + offset) * CUBE_SIZE);
+				cubeEntity.transform.position = cubePos;
+
+				const boxCollider = cubeEntity.addComponent(BoxCollider);
+				boxCollider.setBoxCenterSize(new Vector3(), new Vector3(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE));
+				const renderer = cubeEntity.addComponent(MeshRenderer);
+				const mtl = new BlinnPhongMaterial(engine);
+				renderer.mesh = createCube(engine, CUBE_SIZE / 2, CUBE_STROKE);
+				renderer.setMaterial(mtl);
+			}
+		}
+	}
+}
 
 export function createOasis() {
 	const engine = new WebGLEngine("canvas");
@@ -39,25 +71,9 @@ export function createOasis() {
 	scene.ambientLight.diffuseSolidColor.setValue(1, 1, 1, 1);
 	scene.ambientLight.diffuseIntensity = 1.2;
 
-	const cubeSize = CUBE_SIZE;
+	xyzHelper(engine, rootEntity);
 
-	for (let i = -1; i < 2; i++) {
-		for (let j = -1; j < 2; j++) {
-			for (let k = -1; k < 2; k++) {
-				const cubeEntity = rootEntity.createChild("cube");
-				const cubePos = cubeEntity.transform.position;
-				cubePos.setValue(i * cubeSize, j * cubeSize, k * cubeSize);
-				cubeEntity.transform.position = cubePos;
-
-				const boxCollider = cubeEntity.addComponent(BoxCollider);
-				boxCollider.setBoxCenterSize(new Vector3(), new Vector3(cubeSize, cubeSize, cubeSize));
-				const renderer = cubeEntity.addComponent(MeshRenderer);
-				const mtl = new BlinnPhongMaterial(engine);
-				renderer.mesh = createCube(engine, cubeSize / 2, CUBE_STROKE);
-				renderer.setMaterial(mtl);
-			}
-		}
-	}
+	createRuickCube(rootEntity, engine);
 
 	const ray = new Ray();
 	const ratio = window.devicePixelRatio;
